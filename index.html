@@ -369,7 +369,7 @@ async function loadFile1(f){
   try{
     file1Data = await readWorkbookAsRows(f);
     box1.classList.add('filled');
-    setStatus('File 1 loaded (' + (file1Data.length - 1) + ' data rows).', 'info');
+    setStatus('File 1 loaded (' + Math.max(0, file1Data.length - 8) + ' data rows).', 'info');
   }catch(err){
     file1Data = null;
     setStatus('Could not read File 1: ' + err.message, 'error');
@@ -387,7 +387,7 @@ async function loadFile2(f){
   try{
     file2Data = await readWorkbookAsRows(f);
     box2.classList.add('filled');
-    setStatus('File 2 loaded (' + (file2Data.length - 1) + ' data rows).', 'info');
+    setStatus('File 2 loaded (' + Math.max(0, file2Data.length - 8) + ' data rows).', 'info');
   }catch(err){
     file2Data = null;
     setStatus('Could not read File 2: ' + err.message, 'error');
@@ -468,8 +468,8 @@ processBtn.addEventListener('click', ()=>{
     const map = new Map(); // key: brand lowercased -> row object
     let file1Count = 0, file2NewCount = 0, file2DupCount = 0;
 
-    // File 1: rows 1..end (row 0 = header). Columns A-F => idx 0-5.
-    for(let i = 1; i < file1Data.length; i++){
+    // File 1: header/title rows occupy rows 1–8; data starts at row 9 (index 8). Columns A-F => idx 0-5.
+    for(let i = 8; i < file1Data.length; i++){
       const row = file1Data[i];
       if(!row) continue;
       const brand = cellStr(row[4]);
@@ -487,8 +487,8 @@ processBtn.addEventListener('click', ()=>{
       file1Count++;
     }
 
-    // File 2: rows 1..end. Columns A-E => idx 0-4. Month always from dropdown.
-    for(let i = 1; i < file2Data.length; i++){
+    // File 2: header/title rows occupy rows 1–8; data starts at row 9 (index 8). Columns A-E => idx 0-4. Month always from dropdown.
+    for(let i = 8; i < file2Data.length; i++){
       const row = file2Data[i];
       if(!row) continue;
       const brand = cellStr(row[4]);
