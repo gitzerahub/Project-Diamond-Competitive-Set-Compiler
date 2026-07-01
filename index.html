@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Project Diamond — Competitive Set Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --c1:#78c0e0;
+    --c2:#449dd1;
+    --c3:#192bc2;
+    --c4:#150578;
+    --c5:#0e0e52;
+    --bg:var(--c5);
+    --panel:#ffffff;
+    --accent:var(--c3);
+    --accent-dark:var(--c4);
+    --text:var(--c5);
+    --muted:#5b6ba8;
+    --border:var(--c1);
+    --success:var(--c2);
+    --warn:var(--c4);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,var(--c5) 0%,var(--c4) 100%);
+    min-height:100vh;
+    padding:32px 16px;
+    color:var(--text);
+  }
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+  }
+  h1{
+    color:#fff;
+    font-size:1.8rem;
+    margin-bottom:4px;
+  }
+  .subtitle{
+    color:var(--c1);
+    margin-bottom:28px;
+    font-size:0.95rem;
+  }
+  .card{
+    background:var(--panel);
+    border-radius:14px;
+    padding:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    margin-bottom:20px;
+  }
+  .card h2{
+    margin-top:0;
+    font-size:1.1rem;
+    color:var(--text);
+    border-bottom:1px solid var(--c1);
+    padding-bottom:10px;
+  }
+  .upload-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:640px){
+    .upload-grid{grid-template-columns:1fr;}
+  }
+  .upload-box{
+    border:2px dashed var(--c1);
+    border-radius:10px;
+    padding:20px;
+    text-align:center;
+    transition:border-color .2s, background .2s;
+    background:rgba(120,192,224,0.08);
+  }
+  .upload-box.filled{
+    border-color:var(--c3);
+    background:rgba(25,43,194,0.08);
+  }
+  .upload-box.dragover{
+    border-color:var(--c2);
+    background:rgba(68,157,209,0.14);
+  }
+  .upload-box:focus{
+    outline:2px solid var(--c2);
+    outline-offset:2px;
+  }
+  .upload-box label{
+    display:block;
+    font-weight:600;
+    margin-bottom:8px;
+    color:var(--text);
+  }
+  .upload-box input[type=file]{
+    width:100%;
+    font-size:0.85rem;
+  }
+  .filename{
+    margin-top:8px;
+    font-size:0.82rem;
+    color:var(--muted);
+    word-break:break-all;
+  }
+  .controls-row{
+    margin-bottom:24px;
+  }
+  .row-flex{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .field label{
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--c1);
+  }
+  select{
+    padding:9px 12px;
+    border-radius:8px;
+    border:1px solid var(--c1);
+    font-size:0.95rem;
+    background:#fff;
+    color:var(--text);
+    min-width:150px;
+  }
+  button{
+    cursor:pointer;
+    border:none;
+    border-radius:8px;
+    padding:11px 20px;
+    font-size:0.95rem;
+    font-weight:600;
+    transition:background .2s, transform .05s;
+  }
+  button:active{transform:scale(0.98);}
+  .btn-primary{
+    background:var(--c3);
+    color:#fff;
+  }
+  .btn-primary:hover{background:var(--c4);}
+  .btn-primary:disabled{
+    background:#9aa5c9;
+    cursor:not-allowed;
+  }
+  .btn-export{
+    background:var(--c2);
+    color:#fff;
+  }
+  .btn-export:hover{background:var(--c3);}
+  .btn-export:disabled{
+    background:#9aa5c9;
+    cursor:not-allowed;
+  }
+  .status{
+    margin-top:14px;
+    font-size:0.88rem;
+    padding:10px 14px;
+    border-radius:8px;
+    display:none;
+    border-left:4px solid transparent;
+  }
+  .status.info{background:rgba(120,192,224,0.16);color:#fff;border-left-color:var(--c1);display:block;}
+  .status.error{background:rgba(14,14,82,0.5);color:#fff;border-left-color:var(--c4);display:block;}
+  .status.success{background:rgba(68,157,209,0.22);color:#fff;border-left-color:var(--c2);display:block;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.85rem;
+    margin-top:16px;
+  }
+  th,td{
+    border:1px solid var(--c1);
+    padding:7px 10px;
+    text-align:left;
+  }
+  th{
+    background:rgba(120,192,224,0.25);
+    color:var(--text);
+    font-weight:600;
+    position:sticky;
+    top:0;
+  }
+  tbody tr:nth-child(even){background:rgba(120,192,224,0.08);}
+  .table-scroll{
+    max-height:380px;
+    overflow-y:auto;
+    border:1px solid var(--c1);
+    border-radius:8px;
+  }
+  .summary{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-top:16px;
+    margin-bottom:6px;
+  }
+  .summary .stat{
+    background:rgba(120,192,224,0.1);
+    border:1px solid var(--c1);
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:0.85rem;
+    color:var(--text);
+  }
+  .summary .stat b{
+    display:block;
+    font-size:1.3rem;
+    color:var(--c3);
+  }
+  .hint{
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-top:6px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Project Diamond — Competitive Set Builder</h1>
+  <div class="subtitle">Merge the Brand column from two Excel files into one de-duplicated competitive set.</div>
+
+  <div class="controls-row">
+    <div class="row-flex">
+      <div class="field">
+        <label for="monthSelect">Month</label>
+        <select id="monthSelect"></select>
+      </div>
+      <div class="field">
+        <label for="yearSelect">Year</label>
+        <select id="yearSelect"></select>
+      </div>
+      <div class="field">
+        <button class="btn-primary" id="processBtn" disabled>Process Files</button>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="upload-grid">
+      <div class="upload-box" id="box1" tabindex="0">
+        <label for="file1">File 1</label>
+        <input type="file" id="file1" accept=".xlsx,.xls">
+        <div class="filename" id="name1">Drop, paste, or browse for a file</div>
+        <div class="hint">Columns A–F: Category, Sub-category, Advertiser, Product, Brand, Month</div>
+      </div>
+      <div class="upload-box" id="box2" tabindex="0">
+        <label for="file2">File 2</label>
+        <input type="file" id="file2" accept=".xlsx,.xls">
+        <div class="filename" id="name2">Drop, paste, or browse for a file</div>
+        <div class="hint">Columns A–E: Category, Sub-category, Advertiser, Product, Brand</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="resultsCard" style="display:none;">
+    <h2>Review &amp; Export</h2>
+    <div class="summary" id="summary"></div>
+    <div class="table-scroll">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Sub-category</th>
+            <th>Advertiser</th>
+            <th>Product</th>
+            <th>Brand</th>
+            <th>Month of addition</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn-export" id="exportBtn">Export to Excel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const monthSelect = document.getElementById('monthSelect');
+const yearSelect = document.getElementById('yearSelect');
+const now = new Date();
+
+MONTHS.forEach((m,i)=>{
+  const opt = document.createElement('option');
+  opt.value = m;
+  opt.textContent = m;
+  if(i === now.getMonth()) opt.selected = true;
+  monthSelect.appendChild(opt);
+});
+
+const currentYear = now.getFullYear();
+for(let y = currentYear - 3; y <= currentYear + 5; y++){
+  const opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y;
+  if(y === currentYear) opt.selected = true;
+  yearSelect.appendChild(opt);
+}
+
+let file1Data = null; // raw array-of-arrays
+let file2Data = null;
+let collated = null; // final result array of row objects, ordered
+
+const file1Input = document.getElementById('file1');
+const file2Input = document.getElementById('file2');
+const name1 = document.getElementById('name1');
+const name2 = document.getElementById('name2');
+const box1 = document.getElementById('box1');
+const box2 = document.getElementById('box2');
+const processBtn = document.getElementById('processBtn');
+const exportBtn = document.getElementById('exportBtn');
+const statusEl = document.getElementById('status');
+const resultsCard = document.getElementById('resultsCard');
+const resultBody = document.getElementById('resultBody');
+const summary = document.getElementById('summary');
+
+function setStatus(msg, type){
+  statusEl.className = 'status ' + (type || 'info');
+  statusEl.textContent = msg;
+}
+
+function readWorkbookAsRows(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:""});
+        resolve(rows);
+      }catch(err){
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function updateProcessButton(){
+  processBtn.disabled = !(file1Data && file2Data);
+}
+
+function isSpreadsheetFile(f){
+  if(!f) return false;
+  const n = f.name.toLowerCase();
+  return n.endsWith('.xlsx') || n.endsWith('.xls');
+}
+
+async function loadFile1(f){
+  if(!isSpreadsheetFile(f)){
+    setStatus('File 1 must be a .xlsx or .xls file.', 'error');
+    return;
+  }
+  name1.textContent = f.name;
+  box1.classList.remove('filled');
+  try{
+    file1Data = await readWorkbookAsRows(f);
+    box1.classList.add('filled');
+    setStatus('File 1 loaded (' + (file1Data.length - 1) + ' data rows).', 'info');
+  }catch(err){
+    file1Data = null;
+    setStatus('Could not read File 1: ' + err.message, 'error');
+  }
+  updateProcessButton();
+}
+
+async function loadFile2(f){
+  if(!isSpreadsheetFile(f)){
+    setStatus('File 2 must be a .xlsx or .xls file.', 'error');
+    return;
+  }
+  name2.textContent = f.name;
+  box2.classList.remove('filled');
+  try{
+    file2Data = await readWorkbookAsRows(f);
+    box2.classList.add('filled');
+    setStatus('File 2 loaded (' + (file2Data.length - 1) + ' data rows).', 'info');
+  }catch(err){
+    file2Data = null;
+    setStatus('Could not read File 2: ' + err.message, 'error');
+  }
+  updateProcessButton();
+}
+
+file1Input.addEventListener('change', ()=>{
+  const f = file1Input.files[0];
+  if(f) loadFile1(f);
+});
+
+file2Input.addEventListener('change', ()=>{
+  const f = file2Input.files[0];
+  if(f) loadFile2(f);
+});
+
+// Drag-and-drop support
+function wireDropZone(box, handler){
+  ['dragenter','dragover'].forEach(evt=>{
+    box.addEventListener(evt, (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      box.classList.add('dragover');
+    });
+  });
+  ['dragleave','dragend'].forEach(evt=>{
+    box.addEventListener(evt, (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      box.classList.remove('dragover');
+    });
+  });
+  box.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    box.classList.remove('dragover');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) handler(f);
+  });
+  // Paste support — click/focus the box, then Ctrl+V
+  box.addEventListener('paste', (e)=>{
+    const items = (e.clipboardData && e.clipboardData.files) || [];
+    if(items.length){
+      handler(items[0]);
+      e.preventDefault();
+    }
+  });
+}
+
+wireDropZone(box1, loadFile1);
+wireDropZone(box2, loadFile2);
+
+// Also allow pasting anywhere on the page — routes to whichever file slot is empty first
+document.addEventListener('paste', (e)=>{
+  if(e.target === box1 || e.target === box2) return; // already handled above
+  const files = (e.clipboardData && e.clipboardData.files) || [];
+  if(!files.length) return;
+  const f = files[0];
+  if(!file1Data){
+    loadFile1(f);
+  }else if(!file2Data){
+    loadFile2(f);
+  }
+});
+
+function cellStr(v){
+  if(v === undefined || v === null) return "";
+  return String(v).trim();
+}
+
+processBtn.addEventListener('click', ()=>{
+  try{
+    const selectedMonth = monthSelect.value;
+    const selectedYear = yearSelect.value;
+    const monthLabel = selectedMonth + " " + selectedYear;
+
+    const map = new Map(); // key: brand lowercased -> row object
+    let file1Count = 0, file2NewCount = 0, file2DupCount = 0;
+
+    // File 1: rows 1..end (row 0 = header). Columns A-F => idx 0-5.
+    for(let i = 1; i < file1Data.length; i++){
+      const row = file1Data[i];
+      if(!row) continue;
+      const brand = cellStr(row[4]);
+      if(!brand) continue; // skip blank brand rows
+      const key = brand.toLowerCase();
+      if(map.has(key)) continue; // already captured (shouldn't happen within same file but guard anyway)
+      map.set(key, {
+        category: cellStr(row[0]),
+        subcategory: cellStr(row[1]),
+        advertiser: cellStr(row[2]),
+        product: cellStr(row[3]),
+        brand: brand,
+        month: cellStr(row[5]) || monthLabel
+      });
+      file1Count++;
+    }
+
+    // File 2: rows 1..end. Columns A-E => idx 0-4. Month always from dropdown.
+    for(let i = 1; i < file2Data.length; i++){
+      const row = file2Data[i];
+      if(!row) continue;
+      const brand = cellStr(row[4]);
+      if(!brand) continue;
+      const key = brand.toLowerCase();
+      if(map.has(key)){
+        file2DupCount++;
+        continue; // brand already present from File 1 — keep File 1's data/month
+      }
+      map.set(key, {
+        category: cellStr(row[0]),
+        subcategory: cellStr(row[1]),
+        advertiser: cellStr(row[2]),
+        product: cellStr(row[3]),
+        brand: brand,
+        month: monthLabel
+      });
+      file2NewCount++;
+    }
+
+    collated = Array.from(map.values());
+
+    // Render table
+    resultBody.innerHTML = '';
+    collated.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.subcategory)}</td><td>${escapeHtml(r.advertiser)}</td><td>${escapeHtml(r.product)}</td><td>${escapeHtml(r.brand)}</td><td>${escapeHtml(r.month)}</td>`;
+      resultBody.appendChild(tr);
+    });
+
+    summary.innerHTML = `
+      <div class="stat"><b>${collated.length}</b>Unique brands</div>
+      <div class="stat"><b>${file1Count}</b>From File 1</div>
+      <div class="stat"><b>${file2NewCount}</b>New from File 2</div>
+      <div class="stat"><b>${file2DupCount}</b>Duplicates skipped from File 2</div>
+    `;
+
+    resultsCard.style.display = 'block';
+    setStatus('Processing complete. Review the table below, then export.', 'success');
+  }catch(err){
+    setStatus('Error while processing: ' + err.message, 'error');
+  }
+});
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
+}
+
+exportBtn.addEventListener('click', ()=>{
+  if(!collated || !collated.length){
+    setStatus('Nothing to export yet — process the files first.', 'error');
+    return;
+  }
+  const selectedMonth = monthSelect.value;
+  const selectedYear = yearSelect.value;
+
+  const aoa = [
+    ["Category","Sub-category","Advertiser","Product","Brand","Month of addition"]
+  ];
+  collated.forEach(r=>{
+    aoa.push([r.category, r.subcategory, r.advertiser, r.product, r.brand, r.month]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:20},{wch:20},{wch:20},{wch:20},{wch:22},{wch:18}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Competitive Set");
+
+  const filename = `Project Diamond Competitive Set ao ${selectedMonth} ${selectedYear}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  setStatus('Exported: ' + filename, 'success');
+});
+</script>
+</body>
+</html>
