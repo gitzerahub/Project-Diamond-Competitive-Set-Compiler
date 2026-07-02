@@ -74,6 +74,9 @@
     text-align:center;
     transition:border-color .2s, background .2s;
     background:rgba(120,192,224,0.08);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
   }
   .upload-box.filled{
     border-color:var(--c3);
@@ -94,8 +97,12 @@
     color:var(--text);
   }
   .upload-box input[type=file]{
-    width:100%;
     font-size:0.85rem;
+    margin:0 auto;
+    display:block;
+  }
+  .upload-box input[type=file]::file-selector-button{
+    cursor:pointer;
   }
   .filename{
     margin-top:8px;
@@ -105,6 +112,21 @@
   }
   .controls-row{
     margin-bottom:24px;
+  }
+  .section-title{
+    color:#fff;
+    font-size:1.1rem;
+    margin:0 0 4px 0;
+  }
+  .section-subtext{
+    color:var(--c1);
+    font-size:0.88rem;
+    margin-bottom:14px;
+  }
+  .process-row{
+    display:flex;
+    justify-content:center;
+    margin-top:20px;
   }
   .row-flex{
     display:flex;
@@ -224,10 +246,12 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Project Diamond — Competitive Set Builder</h1>
-  <div class="subtitle">Merge the Brand column from two Excel files into one de-duplicated competitive set.</div>
+  <h1>Project Diamond: Competitive Set Aggregator</h1>
+  <div class="subtitle">Compiles uploaded competitive set brand lists and identifies newly added brands by comparing them against previous files.</div>
 
   <div class="controls-row">
+    <h2 class="section-title">Period Coverage</h2>
+    <div class="section-subtext">Select the period covered by the brand list from the latest run</div>
     <div class="row-flex">
       <div class="field">
         <label for="monthSelect">Month</label>
@@ -236,9 +260,6 @@
       <div class="field">
         <label for="yearSelect">Year</label>
         <select id="yearSelect"></select>
-      </div>
-      <div class="field">
-        <button class="btn-primary" id="processBtn" disabled>Process Files</button>
       </div>
     </div>
     <div class="status" id="status"></div>
@@ -258,6 +279,9 @@
         <div class="filename" id="name2">Drop, paste, or browse for a file</div>
         <div class="hint">Columns A–E: Category, Sub-category, Advertiser, Product, Brand</div>
       </div>
+    </div>
+    <div class="process-row">
+      <button class="btn-primary" id="processBtn" disabled>Process Files</button>
     </div>
   </div>
 
