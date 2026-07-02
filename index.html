@@ -192,8 +192,15 @@
   .status.info{background:rgba(120,192,224,0.16);color:#fff;border-left-color:var(--c1);display:block;}
   .status.error{background:rgba(14,14,82,0.5);color:#fff;border-left-color:var(--c4);display:block;}
   .status.success{background:rgba(68,157,209,0.22);color:#fff;border-left-color:var(--c2);display:block;}
+  .card.wide{
+    max-width:1400px;
+    width:94vw;
+    margin-left:50%;
+    transform:translateX(-50%);
+  }
   table{
     width:100%;
+    table-layout:fixed;
     border-collapse:collapse;
     font-size:0.85rem;
     margin-top:16px;
@@ -202,6 +209,8 @@
     border:1px solid var(--c1);
     padding:7px 10px;
     text-align:left;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
   }
   th{
     background:rgba(120,192,224,0.25);
@@ -212,8 +221,9 @@
   }
   tbody tr:nth-child(even){background:rgba(120,192,224,0.08);}
   .table-scroll{
-    max-height:380px;
+    max-height:520px;
     overflow-y:auto;
+    overflow-x:hidden;
     border:1px solid var(--c1);
     border-radius:8px;
   }
@@ -285,11 +295,19 @@
     </div>
   </div>
 
-  <div class="card" id="resultsCard" style="display:none;">
+  <div class="card wide" id="resultsCard" style="display:none;">
     <h2>Review &amp; Export</h2>
     <div class="summary" id="summary"></div>
     <div class="table-scroll">
       <table id="resultTable">
+        <colgroup>
+          <col style="width:17%;">
+          <col style="width:17%;">
+          <col style="width:19%;">
+          <col style="width:19%;">
+          <col style="width:16%;">
+          <col style="width:12%;">
+        </colgroup>
         <thead>
           <tr>
             <th>Category</th>
