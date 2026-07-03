@@ -411,7 +411,7 @@ async function loadFile1(f){
   try{
     file1Data = await readWorkbookAsRows(f);
     box1.classList.add('filled');
-    setStatus('File 1 loaded (' + Math.max(0, file1Data.length - 8) + ' data rows).', 'info');
+    setStatus('File 1 loaded (' + Math.max(0, file1Data.length - 1) + ' data rows).', 'info');
   }catch(err){
     file1Data = null;
     setStatus('Could not read File 1: ' + err.message, 'error');
@@ -429,7 +429,7 @@ async function loadFile2(f){
   try{
     file2Data = await readWorkbookAsRows(f);
     box2.classList.add('filled');
-    setStatus('File 2 loaded (' + Math.max(0, file2Data.length - 8) + ' data rows).', 'info');
+    setStatus('File 2 loaded (' + Math.max(0, file2Data.length - 1) + ' data rows).', 'info');
   }catch(err){
     file2Data = null;
     setStatus('Could not read File 2: ' + err.message, 'error');
@@ -507,44 +507,58 @@ processBtn.addEventListener('click', ()=>{
     const selectedYear = yearSelect.value;
     const monthLabel = selectedMonth + " " + selectedYear;
 
-    const map = new Map(); // key: brand lowercased -> row object
+    const map = new Map(); // key: combination of Category|Sub-category|Advertiser|Product|Brand (lowercased) -> row object
     let file1Count = 0, file2NewCount = 0, file2DupCount = 0;
 
-    // File 1: header/title rows occupy rows 1–8; data starts at row 9 (index 8). Columns A-F => idx 0-5.
-    for(let i = 8; i < file1Data.length; i++){
+    function makeKey(category, subcategory, advertiser, product, brand){
+      return [category, subcategory, advertiser, product, brand]
+        .map(v => v.toLowerCase())
+        .join('||');
+    }
+
+    // File 1: header is row 1; data starts at row 2 (index 1). Columns A-F => idx 0-5.
+    for(let i = 1; i < file1Data.length; i++){
       const row = file1Data[i];
       if(!row) continue;
+      const category = cellStr(row[0]);
+      const subcategory = cellStr(row[1]);
+      const advertiser = cellStr(row[2]);
+      const product = cellStr(row[3]);
       const brand = cellStr(row[4]);
       if(!brand) continue; // skip blank brand rows
-      const key = brand.toLowerCase();
+      const key = makeKey(category, subcategory, advertiser, product, brand);
       if(map.has(key)) continue; // already captured (shouldn't happen within same file but guard anyway)
       map.set(key, {
-        category: cellStr(row[0]),
-        subcategory: cellStr(row[1]),
-        advertiser: cellStr(row[2]),
-        product: cellStr(row[3]),
+        category: category,
+        subcategory: subcategory,
+        advertiser: advertiser,
+        product: product,
         brand: brand,
         month: cellStr(row[5]) || monthLabel
       });
       file1Count++;
     }
 
-    // File 2: header/title rows occupy rows 1–8; data starts at row 9 (index 8). Columns A-E => idx 0-4. Month always from dropdown.
-    for(let i = 8; i < file2Data.length; i++){
+    // File 2: header is row 1; data starts at row 2 (index 1). Columns A-E => idx 0-4. Month always from dropdown.
+    for(let i = 1; i < file2Data.length; i++){
       const row = file2Data[i];
       if(!row) continue;
+      const category = cellStr(row[0]);
+      const subcategory = cellStr(row[1]);
+      const advertiser = cellStr(row[2]);
+      const product = cellStr(row[3]);
       const brand = cellStr(row[4]);
       if(!brand) continue;
-      const key = brand.toLowerCase();
+      const key = makeKey(category, subcategory, advertiser, product, brand);
       if(map.has(key)){
         file2DupCount++;
-        continue; // brand already present from File 1 — keep File 1's data/month
+        continue; // this exact combination already present from File 1 — keep File 1's data/month
       }
       map.set(key, {
-        category: cellStr(row[0]),
-        subcategory: cellStr(row[1]),
-        advertiser: cellStr(row[2]),
-        product: cellStr(row[3]),
+        category: category,
+        subcategory: subcategory,
+        advertiser: advertiser,
+        product: product,
         brand: brand,
         month: monthLabel
       });
