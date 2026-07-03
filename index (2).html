@@ -315,7 +315,7 @@
             <th>Advertiser</th>
             <th>Product</th>
             <th>Brand</th>
-            <th>Month of addition</th>
+            <th>Data Period Introduced</th>
           </tr>
         </thead>
         <tbody id="resultBody"></tbody>
@@ -605,7 +605,7 @@ exportBtn.addEventListener('click', ()=>{
   const selectedYear = yearSelect.value;
 
   const aoa = [
-    ["Category","Sub-category","Advertiser","Product","Brand","Month of addition"]
+    ["Category","Sub-category","Advertiser","Product","Brand","Data Period Introduced"]
   ];
   collated.forEach(r=>{
     aoa.push([r.category, r.subcategory, r.advertiser, r.product, r.brand, r.month]);
